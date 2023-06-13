@@ -78,16 +78,14 @@ class GhBalanceSheet extends GhHtmlElement {
             if (!result[debitAccount]) {
                 result[debitAccount] = {
                     past: [],
-                    current: [],
-                    future: []
+                    current: []
                 };
             }
 
             if (!result[creditAccount]) {
                 result[creditAccount] = {
                     past: [],
-                    current: [],
-                    future: []
+                    current: []
                 }
             }
 
@@ -104,9 +102,6 @@ class GhBalanceSheet extends GhHtmlElement {
             } else if (date < rangeStart) {
                 result[debitAccount].past.push({ type: 'debit', ...transaction });
                 result[creditAccount].past.push({ type: 'credit', ...transaction });
-            } else if (date > rangeEnd) {
-                result[debitAccount].future.push({ type: 'debit', ...transaction });
-                result[creditAccount].future.push({ type: 'credit', ...transaction });
             }
         }
 
@@ -114,18 +109,20 @@ class GhBalanceSheet extends GhHtmlElement {
 
         const data = [
             ["Рахунок", "Сальдо на початок періоду", '', "Обороти за період", '', "Сальдо на кінець періоду", ''],
-            ['', 'Дебет', 'Кредит', 'Дебет', 'Кредим', 'Дебет', 'Кредит']
+            ['', 'Дебет', 'Кредит', 'Дебет', 'Кредит', 'Дебет', 'Кредит']
         ];
 
         for (const index in result) {
+            const pastResult = this.sumOperations(result[index].past, 'debit') - this.sumOperations(result[index].past, 'credit');
+            const futureResult = (this.sumOperations(result[index].current, 'debit') - this.sumOperations(result[index].current, 'credit')) + pastResult;
             const arr = [
                 index,
-                this.sumOperations(result[index].past, 'debit'),
-                this.sumOperations(result[index].past, 'credit'),
+                pastResult > 0 ? pastResult : '',
+                pastResult < 0 ? Math.abs(pastResult) : '',
                 this.sumOperations(result[index].current, 'debit'),
                 this.sumOperations(result[index].current, 'credit'),
-                this.sumOperations(result[index].future, 'debit'),
-                this.sumOperations(result[index].future, 'credit')
+                futureResult > 0 ? futureResult : '',
+                futureResult < 0 ? Math.abs(futureResult) : ''
             ];
             data.push(arr);
         }
