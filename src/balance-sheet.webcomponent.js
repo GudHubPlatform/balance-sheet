@@ -16,7 +16,7 @@ class GhBalanceSheet extends GhHtmlElement {
 
     constructor() {
         super();
-        this.buttonListenerActivated = false;
+        this.table;
     }
 
     // onInit() is called after parent gh-element scope is ready
@@ -42,25 +42,28 @@ class GhBalanceSheet extends GhHtmlElement {
 
         compiled(this.scope);
 
-        if(!this.value) {
+        if (!this.value) {
             this.value = `${gudhub.util.getDate('month_past,past') + 86400000}:${gudhub.util.getDate('month_current,current')}`
         }
 
-        this.renderTable();
+        const data = await this.prepareData();
+
+        this.renderTable(data);
     }
 
     // onUpdate() is called after value was updated
 
-    onUpdate() {
-        if(this.value && !Array.isArray(this.value)) {
-            this.renderTable();
+    async onUpdate() {
+        if (this.value && !Array.isArray(this.value)) {
+            const data = await this.prepareData();
+            this.table.loadData(data);
         }
     }
 
-    async renderTable() {
+    async prepareData() {
         const { app_id, count_field, credit_account_field, credit_subaccount_field, debit_account_field, debit_subaccount_field, date_field, summ_field } = this.scope.field_model.data_model;
 
-        if(!app_id || !count_field || !credit_account_field || !debit_account_field || !date_field || !summ_field) {
+        if (!app_id || !count_field || !credit_account_field || !debit_account_field || !date_field || !summ_field) {
             return;
         }
 
@@ -105,8 +108,6 @@ class GhBalanceSheet extends GhHtmlElement {
             }
         }
 
-        const container = this.querySelector('.balance-sheet');
-
         const data = [
             ["Рахунок", "Сальдо на початок періоду", '', "Обороти за період", '', "Сальдо на кінець періоду", ''],
             ['', 'Дебет', 'Кредит', 'Дебет', 'Кредит', 'Дебет', 'Кредит']
@@ -127,11 +128,16 @@ class GhBalanceSheet extends GhHtmlElement {
             data.push(arr);
         }
 
-        data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`])
+        data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
+        return data;
+    }
 
-        const table = new Handsontable(container, {
+    async renderTable(data) {
+        const container = this.querySelector('.balance-sheet');
+
+        this.table = new Handsontable(container, {
             licenseKey: 'non-commercial-and-evaluation',
-            data: data,
+            data,
             rowHeaders: false,
             colHeaders: false,
             colWidths: 150,
@@ -157,7 +163,7 @@ class GhBalanceSheet extends GhHtmlElement {
                     }
                 }
 
-                if(col === 0 && row !== 0 && row !== 1) {
+                if (col === 0 && row !== 0 && row !== 1) {
                     cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
                         Handsontable.renderers.TextRenderer.apply(this, arguments);
                         td.style.fontWeight = 'bold';
@@ -176,30 +182,25 @@ class GhBalanceSheet extends GhHtmlElement {
             }
         });
 
-        if(!this.buttonListenerActivated) {
+        const exportPlugin = this.table.getPlugin('exportFile');
 
-            const exportPlugin = table.getPlugin('exportFile');
+        const button = this.querySelector('button');
 
-            const button = this.querySelector('button');
-
-            button.addEventListener('click', () => {
-                exportPlugin.downloadFile('csv', {
-                    bom: false,
-                    columnDelimiter: ',',
-                    columnHeaders: false,
-                    exportHiddenColumns: true,
-                    exportHiddenRows: true,
-                    fileExtension: 'csv',
-                    filename: 'Handsontable-CSV-file_[YYYY]-[MM]-[DD]',
-                    mimeType: 'text/csv',
-                    rowDelimiter: '\r\n',
-                    rowHeaders: true
-                });
+        button.addEventListener('click', () => {
+            exportPlugin.downloadFile('csv', {
+                bom: false,
+                columnDelimiter: ',',
+                columnHeaders: false,
+                exportHiddenColumns: true,
+                exportHiddenRows: true,
+                fileExtension: 'csv',
+                filename: 'Handsontable-CSV-file_[YYYY]-[MM]-[DD]',
+                mimeType: 'text/csv',
+                rowDelimiter: '\r\n',
+                rowHeaders: true
             });
-        
-            this.buttonListenerActivated = true;
+        });
 
-        }
     }
 
     sumOperations(operations, type) {
