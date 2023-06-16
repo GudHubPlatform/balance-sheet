@@ -61,8 +61,8 @@ export default class GhInputData {
                         data_model: function () {
                             return {
                                 data_type: 'app',
-                                field_name: 'App',
-                                name_space: 'app',
+                                field_name: 'Operations App',
+                                name_space: 'operations_app',
                                 data_model: {
                                     current_app: false,
                                     interpretation: [{
@@ -221,6 +221,52 @@ export default class GhInputData {
                         onInit: function(settingScope, fieldModel) {
                             settingScope.$watch(function() {
                                 return fieldModel.data_model.app_id;
+                            }, function(newValue) {
+                                settingScope.field_model.data_model.app_id = newValue;
+                            });
+                        }
+                    }
+                ],
+                [
+                    {
+                        type: 'ghElement',
+                        property: 'data_model.accounts_app_id',
+                        data_model: function() {
+                            return {
+                                data_type: 'app',
+                                field_name: 'Accounts App',
+                                name_space: 'accounts_app',
+                                data_model: {
+                                    current_app: false,
+                                    interpretation: [{
+                                        src: 'form',
+                                        id: 'with_text',
+                                        settings: {
+                                            editable: 1,
+                                            show_field_name: 1,
+                                            show_field: 1
+                                        },
+                                    }]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'ghElement',
+                        property: 'data_model.account_field',
+                        data_model: function (fieldModel) {
+                            return {
+                                data_type: 'field',
+                                field_name: 'Account field',
+                                name_space: 'account_field',
+                                data_model: {
+                                    app_id: fieldModel.data_model.accounts_app_id
+                                }
+                            }
+                        },
+                        onInit: function(settingScope, fieldModel) {
+                            settingScope.$watch(function() {
+                                return fieldModel.data_model.accounts_app_id;
                             }, function(newValue) {
                                 settingScope.field_model.data_model.app_id = newValue;
                             });

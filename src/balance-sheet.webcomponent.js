@@ -17,6 +17,7 @@ class GhBalanceSheet extends GhHtmlElement {
     constructor() {
         super();
         this.table;
+        this.account;
     }
 
     // onInit() is called after parent gh-element scope is ready
@@ -24,7 +25,7 @@ class GhBalanceSheet extends GhHtmlElement {
     async onInit() {
         super.render(html);
 
-        const cont = angular.element(this.querySelector('.range'));
+        const container = angular.element(this.querySelector('.range'));
 
         const decorator = {
             data_type: 'date',
@@ -38,9 +39,38 @@ class GhBalanceSheet extends GhHtmlElement {
         const compiler = gudhub.ghconstructor.angularInjector.get('$compile');
         const compiled = compiler(element);
 
-        cont.append(element);
+        container.append(element);
 
         compiled(this.scope);
+
+        const accountContainer = angular.element(this.querySelector('.account'));
+
+        const accountDecorator = {
+            data_type: 'item_ref',
+            field_name: 'Рахунок',
+            data_model: {
+                refs: [
+                    {
+                        app_id: this.scope.field_model.data_model.accounts_app_id,
+                        field_id: this.scope.field_model.data_model.account_field
+                    }
+                ]
+            }
+        }
+
+        const accountElement = angular.element(`<gh-element decorator='${JSON.stringify(accountDecorator)}' value="account"></gh-element>`);
+        const accountCompiled = compiler(accountElement);
+
+        accountContainer.append(accountElement);
+
+        accountCompiled(this.scope);
+
+        this.scope.$watch('account', (newValue, oldValue) => {
+            if(newValue !== oldValue) {
+                this.account = newValue;
+                this.onUpdate();
+            }
+        });
 
         if (!this.value) {
             this.value = `${gudhub.util.getDate('month_past,past') + 86400000}:${gudhub.util.getDate('month_current,current')}`
@@ -55,7 +85,12 @@ class GhBalanceSheet extends GhHtmlElement {
 
     async onUpdate() {
         if (this.value && !Array.isArray(this.value)) {
-            const data = await this.prepareData();
+            let data;
+            if(this.account) {
+                data = await this.prepareAccountData();
+            } else {
+                data = await this.prepareData();
+            }
             this.table.loadData(data);
         }
     }
@@ -105,6 +140,78 @@ class GhBalanceSheet extends GhHtmlElement {
             } else if (date < rangeStart) {
                 result[debitAccount].past.push({ type: 'debit', ...transaction });
                 result[creditAccount].past.push({ type: 'credit', ...transaction });
+            }
+        }
+
+        const data = [
+            ["Рахунок", "Сальдо на початок періоду", '', "Обороти за період", '', "Сальдо на кінець періоду", ''],
+            ['', 'Дебет', 'Кредит', 'Дебет', 'Кредит', 'Дебет', 'Кредит']
+        ];
+
+        for (const index in result) {
+            const pastResult = this.sumOperations(result[index].past, 'debit') - this.sumOperations(result[index].past, 'credit');
+            const futureResult = (this.sumOperations(result[index].current, 'debit') - this.sumOperations(result[index].current, 'credit')) + pastResult;
+            const arr = [
+                index,
+                pastResult > 0 ? pastResult : '',
+                pastResult < 0 ? Math.abs(pastResult) : '',
+                this.sumOperations(result[index].current, 'debit'),
+                this.sumOperations(result[index].current, 'credit'),
+                futureResult > 0 ? futureResult : '',
+                futureResult < 0 ? Math.abs(futureResult) : ''
+            ];
+            data.push(arr);
+        }
+
+        data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
+        return data;
+    }
+
+    async prepareAccountData() {
+        const { app_id, count_field, credit_account_field, credit_subaccount_field, debit_account_field, debit_subaccount_field, date_field, summ_field } = this.scope.field_model.data_model;
+
+        if (!app_id || !count_field || !credit_account_field || !debit_account_field || !date_field || !summ_field) {
+            return;
+        }
+
+        const items = await gudhub.getItems(app_id);
+
+        const result = {};
+        const splitRange = this.value.split(':');
+        const rangeStart = Number(splitRange[0]);
+        const rangeEnd = Number(splitRange[1]);
+
+        for (const item of items) {
+            const debitSubaccount = await gudhub.getInterpretationById(app_id, item.item_id, debit_subaccount_field, 'value');
+            const creditSubaccount = await gudhub.getInterpretationById(app_id, item.item_id, credit_subaccount_field, 'value');
+
+            if (!result[debitSubaccount]) {
+                result[debitSubaccount] = {
+                    past: [],
+                    current: []
+                };
+            }
+
+            if (!result[creditSubaccount]) {
+                result[creditSubaccount] = {
+                    past: [],
+                    current: []
+                }
+            }
+
+            const transaction = {
+                summ: item.fields.find(field => field.field_id == summ_field)?.field_value,
+                count: item.fields.find(field => field.field_id == count_field)?.field_value
+            }
+
+            const date = Number(item.fields.find(field => field.field_id == date_field)?.field_value);
+
+            if (rangeStart < date && date < rangeEnd) {
+                result[debitSubaccount].current.push({ type: 'debit', ...transaction });
+                result[creditSubaccount].current.push({ type: 'credit', ...transaction });
+            } else if (date < rangeStart) {
+                result[debitSubaccount].past.push({ type: 'debit', ...transaction });
+                result[creditSubaccount].past.push({ type: 'credit', ...transaction });
             }
         }
 
