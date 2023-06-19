@@ -253,6 +253,10 @@ class GhBalanceSheet extends GhHtmlElement {
             data.push(arr);
         }
 
+        if(Object.keys(result).length == 0) {
+            return data;
+        }
+
         data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
         return data;
     }
