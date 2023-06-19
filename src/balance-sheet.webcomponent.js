@@ -176,12 +176,22 @@ class GhBalanceSheet extends GhHtmlElement {
 
         const items = await gudhub.getItems(app_id);
 
+        const filteredItems = items.filter(item => {
+            if(item.fields.find(field => field.field_id == debit_account_field)?.field_value == this.account) {
+                return true;
+            }
+            if(item.fields.find(field => field.field_id == credit_account_field)?.field_value == this.account) {
+                return true;
+            }
+            return false;
+        });
+
         const result = {};
         const splitRange = this.value.split(':');
         const rangeStart = Number(splitRange[0]);
         const rangeEnd = Number(splitRange[1]);
 
-        for (const item of items) {
+        for (const item of filteredItems) {
             const debitSubaccount = await gudhub.getInterpretationById(app_id, item.item_id, debit_subaccount_field, 'value');
             const creditSubaccount = await gudhub.getInterpretationById(app_id, item.item_id, credit_subaccount_field, 'value');
 
@@ -207,11 +217,19 @@ class GhBalanceSheet extends GhHtmlElement {
             const date = Number(item.fields.find(field => field.field_id == date_field)?.field_value);
 
             if (rangeStart < date && date < rangeEnd) {
-                result[debitSubaccount].current.push({ type: 'debit', ...transaction });
-                result[creditSubaccount].current.push({ type: 'credit', ...transaction });
+                if(item.fields.find(field => field.field_id == debit_account_field)?.field_value == this.account) {
+                    result[debitSubaccount].current.push({ type: 'debit', ...transaction });
+                }
+                if(item.fields.find(field => field.field_id == credit_account_field)?.field_value == this.account) {
+                    result[creditSubaccount].current.push({ type: 'credit', ...transaction });
+                }
             } else if (date < rangeStart) {
-                result[debitSubaccount].past.push({ type: 'debit', ...transaction });
-                result[creditSubaccount].past.push({ type: 'credit', ...transaction });
+                if(item.fields.find(field => field.field_id == debit_account_field)?.field_value == this.account) {
+                    result[debitSubaccount].past.push({ type: 'debit', ...transaction });
+                }
+                if(item.fields.find(field => field.field_id == credit_account_field)?.field_value == this.account) {
+                    result[creditSubaccount].past.push({ type: 'credit', ...transaction });
+                }
             }
         }
 
