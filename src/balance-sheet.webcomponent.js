@@ -311,25 +311,6 @@ class GhBalanceSheet extends GhHtmlElement {
             }
         });
 
-        const exportPlugin = this.table.getPlugin('exportFile');
-
-        const button = this.querySelector('button');
-
-        button.addEventListener('click', () => {
-            exportPlugin.downloadFile('csv', {
-                bom: false,
-                columnDelimiter: ',',
-                columnHeaders: false,
-                exportHiddenColumns: true,
-                exportHiddenRows: true,
-                fileExtension: 'csv',
-                filename: 'Handsontable-CSV-file_[YYYY]-[MM]-[DD]',
-                mimeType: 'text/csv',
-                rowDelimiter: '\r\n',
-                rowHeaders: true
-            });
-        });
-
     }
 
     sumOperations(operations, type) {
@@ -339,6 +320,23 @@ class GhBalanceSheet extends GhHtmlElement {
             }
             return acc;
         }, 0);
+    }
+
+    exportToCSV() {
+        const exportPlugin = this.table.getPlugin('exportFile');
+
+        exportPlugin.downloadFile('csv', {
+            bom: false,
+            columnDelimiter: ',',
+            columnHeaders: false,
+            exportHiddenColumns: true,
+            exportHiddenRows: true,
+            fileExtension: 'csv',
+            filename: 'Handsontable-CSV-file_[YYYY]-[MM]-[DD]',
+            mimeType: 'text/csv',
+            rowDelimiter: '\r\n',
+            rowHeaders: true
+        });
     }
 
 }
