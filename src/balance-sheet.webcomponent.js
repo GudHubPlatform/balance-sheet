@@ -90,6 +90,8 @@ class GhBalanceSheet extends GhHtmlElement {
             rowHeaders: false,
             colHeaders: false,
             colWidths: 150,
+            width: '100%',
+            height: 'auto',
             mergeCells: [
                 { row: 0, col: 1, rowspan: 1, colspan: 2 },
                 { row: 0, col: 3, rowspan: 1, colspan: 2 },
