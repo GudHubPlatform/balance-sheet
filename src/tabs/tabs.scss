@@ -10,8 +10,35 @@ gh-balance-sheet-tabs {
             border-right: none;
             font-weight: 700;
             font-size: 12px;
-            padding: 5px;
+            padding: 7px 20px;
             cursor: pointer;
+            position: relative;
+
+            .close-tab {
+                position: absolute;
+                right: 3px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 14px;
+                height: 14px;
+                justify-content: center;
+                align-items: center;
+                display: none;
+
+                &:hover {
+                    svg {
+                        path {
+                            fill: red;
+                        }
+                    }
+                }
+            }
+
+            &:hover {
+                .close-tab {
+                    display: flex;
+                }
+            }
 
             &.active {
                 color: limegreen;

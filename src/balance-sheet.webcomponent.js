@@ -122,7 +122,8 @@ class GhBalanceSheet extends GhHtmlElement {
                             this.querySelector('gh-balance-sheet-tabs').addTab({
                                 name: `ОСВ за рахунком ${account}`,
                                 type: 'account',
-                                data: `${this.accounts.app_id}.${item.item_id}`
+                                data: `${this.accounts.app_id}.${item.item_id}`,
+                                closable: true
                             });
                         }
                     }
