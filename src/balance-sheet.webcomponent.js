@@ -48,39 +48,10 @@ class GhBalanceSheet extends GhHtmlElement {
 
         compiled(this.scope);
 
-        const accountContainer = angular.element(this.querySelector('.account'));
-
         this.accounts = {
             app_id: this.scope.field_model.data_model.accounts_app_id,
             field_id: this.scope.field_model.data_model.account_field
         }
-        
-        const accountDecorator = {
-            data_type: 'item_ref',
-            field_name: 'Рахунок',
-            data_model: {
-                refs: [
-                    {
-                        app_id: this.accounts.app_id,
-                        field_id: this.accounts.field_id
-                    }
-                ]
-            }
-        }
-
-        const accountElement = angular.element(`<gh-element decorator='${JSON.stringify(accountDecorator)}' value="account"></gh-element>`);
-        const accountCompiled = compiler(accountElement);
-
-        accountContainer.append(accountElement);
-
-        accountCompiled(this.scope);
-
-        this.scope.$watch('account', (newValue, oldValue) => {
-            if(newValue !== oldValue) {
-                this.account = newValue;
-                this.onUpdate();
-            }
-        });
 
         if (!this.value) {
             this.value = `${gudhub.util.getDate('month_past,past') + 86400000}:${gudhub.util.getDate('month_current,current')}`
