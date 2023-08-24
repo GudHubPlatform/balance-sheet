@@ -4,6 +4,7 @@ gh-balance-sheet-tabs {
         align-items: center;
         justify-content: flex-start;
         width: 100%;
+        overflow-x: auto;
 
         .tab {
             border: 1px solid gray;
@@ -13,6 +14,7 @@ gh-balance-sheet-tabs {
             padding: 7px 20px;
             cursor: pointer;
             position: relative;
+            white-space: nowrap;
 
             .close-tab {
                 position: absolute;
