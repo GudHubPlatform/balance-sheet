@@ -37,6 +37,8 @@ class Tabs extends HTMLElement {
         });
 
         this.querySelector('.tabs').append(tabElement);
+
+        tabElement.click();
     }
 
     setActiveTab(tab) {
