@@ -8,6 +8,8 @@ import "handsontable/dist/handsontable.full.css";
 
 const hyperformulaInstance = HyperFormula.buildEmpty();
 
+import './tabs/tabs.webcomponent.js';
+
 import DataPreparation from "./DataPreparation.js";
 
 class GhBalanceSheet extends GhHtmlElement {
@@ -48,14 +50,19 @@ class GhBalanceSheet extends GhHtmlElement {
 
         const accountContainer = angular.element(this.querySelector('.account'));
 
+        this.accounts = {
+            app_id: this.scope.field_model.data_model.accounts_app_id,
+            field_id: this.scope.field_model.data_model.account_field
+        }
+        
         const accountDecorator = {
             data_type: 'item_ref',
             field_name: 'Рахунок',
             data_model: {
                 refs: [
                     {
-                        app_id: this.scope.field_model.data_model.accounts_app_id,
-                        field_id: this.scope.field_model.data_model.account_field
+                        app_id: this.accounts.app_id,
+                        field_id: this.accounts.field_id
                     }
                 ]
             }
@@ -80,6 +87,11 @@ class GhBalanceSheet extends GhHtmlElement {
         }
 
         const data = await this.dataPreparation.summary(this.value);
+
+        this.querySelector('gh-balance-sheet-tabs').addEventListener('tabChange', (event) => {
+            this.account = event.detail.data;
+            this.onUpdate();
+        });
 
         this.renderTable(data);
     }
@@ -115,6 +127,35 @@ class GhBalanceSheet extends GhHtmlElement {
             ],
             formulas: {
                 engine: hyperformulaInstance
+            },
+            contextMenu: {
+                items: {
+                    'add_tab': {
+                        name: 'ОСВ за рахунком',
+                        callback: async (key, selection, clickEvent) => {
+                            const account = data[selection[0].start.row][0];
+
+                            const app = await gudhub.getApp(this.accounts.app_id);
+
+                            const item = app.items_list.find(item => {
+                                const field = item.fields.find(field => field.field_id == this.accounts.field_id);
+                                if(field && field.field_value == account) {
+                                    return true;
+                                }
+                            })
+
+                            if(!item) {
+                                return;
+                            }
+
+                            this.querySelector('gh-balance-sheet-tabs').addTab({
+                                name: `ОСВ за рахунком ${account}`,
+                                type: 'account',
+                                data: `${this.accounts.app_id}.${item.item_id}`
+                            });
+                        }
+                    }
+                }
             },
             cells(row, col) {
                 const cellProperties = {};

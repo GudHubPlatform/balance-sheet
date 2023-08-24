@@ -1,0 +1,25 @@
+gh-balance-sheet-tabs {
+    .tabs {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+
+        .tab {
+            border: 1px solid gray;
+            border-right: none;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 5px;
+            cursor: pointer;
+
+            &.active {
+                color: limegreen;
+            }
+
+            &:nth-last-child(1) {
+                border-right: 1px solid gray;
+            }
+        }
+    }
+}
