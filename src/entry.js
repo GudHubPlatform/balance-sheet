@@ -54,7 +54,12 @@ export default class GhInputData {
             type: 'general_setting',
             icon: 'menu',
             columns_list: [
+                [],
                 [
+                    {
+                        title: "Operations",
+                        type: "header"
+                    },
                     {
                         type: 'ghElement',
                         property: 'data_model.app_id',
@@ -225,9 +230,35 @@ export default class GhInputData {
                                 settingScope.field_model.data_model.app_id = newValue;
                             });
                         }
+                    },
+                    {
+                        type: 'ghElement',
+                        property: 'data_model.document_field',
+                        data_model: function (fieldModel) {
+                            return {
+                                data_type: 'field',
+                                field_name: 'Document field',
+                                name_space: 'document_field',
+
+                                data_model: {
+                                    app_id: fieldModel.data_model.app_id
+                                }
+                            }
+                        },
+                        onInit: function(settingScope, fieldModel) {
+                            settingScope.$watch(function() {
+                                return fieldModel.data_model.app_id;
+                            }, function(newValue) {
+                                settingScope.field_model.data_model.app_id = newValue;
+                            });
+                        }
                     }
                 ],
                 [
+                    {
+                        title: "Accounts",
+                        type: "header"
+                    },
                     {
                         type: 'ghElement',
                         property: 'data_model.accounts_app_id',

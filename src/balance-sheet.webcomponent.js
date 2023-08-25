@@ -20,6 +20,7 @@ class GhBalanceSheet extends GhHtmlElement {
         super();
         this.table;
         this.account;
+        this.reportType = 'summary';
     }
 
     // onInit() is called after parent gh-element scope is ready
@@ -61,6 +62,7 @@ class GhBalanceSheet extends GhHtmlElement {
 
         this.querySelector('gh-balance-sheet-tabs').addEventListener('tabChange', (event) => {
             this.account = event.detail.data;
+            this.reportType = event.detail.type;
             this.onUpdate();
         });
 
@@ -72,12 +74,22 @@ class GhBalanceSheet extends GhHtmlElement {
     async onUpdate() {
         if (this.value && !Array.isArray(this.value)) {
             let data;
-            if(this.account) {
-                data = await this.dataPreparation.account(this.value, this.account);
-            } else {
-                data = await this.dataPreparation.summary(this.value);
+            switch(this.reportType) {
+                case 'summary':
+                    data = await this.dataPreparation.summary(this.value);
+                    break;
+                case 'account':
+                    data = await this.dataPreparation.account(this.value, this.account);
+                    break;
+                case 'accountCard':
+                    data = await this.dataPreparation.accountCard(this.value, this.account);
+                    break;
             }
-            this.table.loadData(data);
+            this.table.loadData(data.data);
+            this.table.updateSettings({
+                mergeCells: data.mergeCells,
+                cells: data.cells
+            });
         }
     }
 
@@ -86,18 +98,13 @@ class GhBalanceSheet extends GhHtmlElement {
 
         this.table = new Handsontable(container, {
             licenseKey: 'non-commercial-and-evaluation',
-            data,
+            data: data.data,
             rowHeaders: false,
             colHeaders: false,
             colWidths: 150,
             width: '100%',
             height: 'auto',
-            mergeCells: [
-                { row: 0, col: 1, rowspan: 1, colspan: 2 },
-                { row: 0, col: 3, rowspan: 1, colspan: 2 },
-                { row: 0, col: 5, rowspan: 1, colspan: 2 },
-                { row: 0, col: 0, rowspan: 2, colspan: 1 },
-            ],
+            mergeCells: data.mergeCells,
             formulas: {
                 engine: hyperformulaInstance
             },
@@ -106,7 +113,7 @@ class GhBalanceSheet extends GhHtmlElement {
                     'add_tab': {
                         name: 'ОСВ за рахунком',
                         callback: async (key, selection, clickEvent) => {
-                            const account = data[selection[0].start.row][0];
+                            const account = data.data[selection[0].start.row][0];
 
                             const app = await gudhub.getApp(this.accounts.app_id);
 
@@ -128,39 +135,36 @@ class GhBalanceSheet extends GhHtmlElement {
                                 closable: true
                             });
                         }
+                    },
+                    'account_card': {
+                        name: 'Картка рахунку',
+                        callback: async (key, selection, clickEvent) => {
+                            const account = data.data[selection[0].start.row][0];
+
+                            const app = await gudhub.getApp(this.accounts.app_id);
+
+                            const item = app.items_list.find(item => {
+                                const field = item.fields.find(field => field.field_id == this.accounts.field_id);
+                                if(field && field.field_value == account) {
+                                    return true;
+                                }
+                            })
+
+                            if(!item) {
+                                return;
+                            }
+
+                            this.querySelector('gh-balance-sheet-tabs').addTab({
+                                name: `Картка рахунку ${account}`,
+                                type: 'accountCard',
+                                data: `${this.accounts.app_id}.${item.item_id}`,
+                                closable: true
+                            });
+                        }
                     }
                 }
             },
-            cells(row, col) {
-                const cellProperties = {};
-
-                if (row === 0 || row === 1) {
-                    cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
-                        Handsontable.renderers.TextRenderer.apply(this, arguments);
-                        td.style.fontWeight = 'bold';
-                        td.style.background = 'rgb(204, 238, 204)';
-                        td.style.color = 'green';
-                        td.style.textAlign = 'center';
-                    }
-                }
-
-                if (col === 0 && row !== 0 && row !== 1) {
-                    cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
-                        Handsontable.renderers.TextRenderer.apply(this, arguments);
-                        td.style.fontWeight = 'bold';
-                        td.style.textAlign = 'center';
-                    }
-                }
-
-                if (row === data.length - 1 && col !== 0) {
-                    cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
-                        Handsontable.renderers.TextRenderer.apply(this, arguments);
-                        td.style.fontWeight = 'bold';
-                    }
-                }
-
-                return cellProperties;
-            }
+            cells: data.cells
         });
 
     }
