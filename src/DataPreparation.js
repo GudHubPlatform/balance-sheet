@@ -427,7 +427,7 @@ export default class DataPreparation {
     sumOperations(operations, type) {
         return operations.reduce((acc, item) => {
             if (item.type === type) {
-                return acc + Number(item.summ);
+                return acc + (Number(item.summ) || 0);
             }
             return acc;
         }, 0);
