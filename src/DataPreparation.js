@@ -188,6 +188,11 @@ export default class DataPreparation {
         ];
 
         for (const index in result) {
+
+            if(result[index].past.length == 0 && result[index].current.length == 0) {
+                continue;
+            }
+
             const pastResult = this.sumOperations(result[index].past, 'debit') - this.sumOperations(result[index].past, 'credit');
             const futureResult = (this.sumOperations(result[index].current, 'debit') - this.sumOperations(result[index].current, 'credit')) + pastResult;
             const arr = [
