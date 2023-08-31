@@ -98,6 +98,7 @@ class GhBalanceSheet extends GhHtmlElement {
 
         this.table = new Handsontable(container, {
             licenseKey: 'non-commercial-and-evaluation',
+            readOnly: true,
             data: data.data,
             rowHeaders: false,
             colHeaders: false,
