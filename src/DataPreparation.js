@@ -74,7 +74,10 @@ export default class DataPreparation {
             data.push(arr);
         }
 
-        data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
+        if(data.length > 2) {
+            data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
+        }
+        
         return {
             data,
             mergeCells: [
@@ -207,12 +210,10 @@ export default class DataPreparation {
             data.push(arr);
         }
 
-        if(Object.keys(result).length == 0) {
-            return data;
+        if(data.length > 2) {
+            data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
         }
 
-        data.push(['Разом', `=SUM(B3:B${data.length})`, `=SUM(C3:C${data.length})`, `=SUM(D3:D${data.length})`, `=SUM(E3:E${data.length})`, `=SUM(F3:F${data.length})`, `=SUM(G3:G${data.length})`]);
-        
         return {
             data,
             mergeCells: [
@@ -352,12 +353,10 @@ export default class DataPreparation {
             data.push(arr);
         }
 
-        if(Object.keys(result).length == 0) {
-            return data;
+        if(data.length > 3) {
+            data.push(['Обороти за період та сальдо на кінець', '', '', '', '', `=SUM(F3:F${data.length})`, '', `=SUM(H3:H${data.length})`, `${ data[data.length - 1][8]}`]);
         }
 
-        data.push(['Обороти за період та сальдо на кінець', '', '', '', '', `=SUM(F3:F${data.length})`, '', `=SUM(H3:H${data.length})`, `${ data[data.length - 1][8]}`]);
-        
         return {
             data,
             mergeCells: [
